@@ -88,16 +88,18 @@ def read_points(point_file):
 
 def write_points(point_file, orig_points, transformed_points):
   assert(len(orig_points) == len(transformed_points))
+  point_file.write("orig_x\torig_y\torig_z\trotated_x\trotated_y\trotated_z\trotated_rad\trotated_theta\n")
   for i in range(len(orig_points)):
     orig_point = orig_points[i]
     transformed_point = transformed_points[i]
-    cylindrical_point = xyz_to_cylindrical(orig_point)
-    point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in cylindrical_point]), '\t'.join([str(f) for f in transformed_point])))
+    cylindrical_point = xyz_to_cylindrical(transformed_point)
+    point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[0:2] ])))
 
 
 def write_point(point_file, orig_point, transformed_point):
-  cylindrical_point = xyz_to_cylindrical(orig_point)
-  point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in cylindrical_point]), '\t'.join([str(f) for f in transformed_point])))
+  cylindrical_point = xyz_to_cylindrical(transformed_point)
+  point_file.write("orig_x\torig_y\torig_z\trotated_x\trotated_y\trotated_z\trotated_rad\trotated_theta\n")
+  point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[1:3] ])))
   #point_file.write("%s\t%s\t%s\n" % ('\t'.join(orig_point), '\t'.join(cylindrical_point), '\t'.join(transformed_point)))
 
 
