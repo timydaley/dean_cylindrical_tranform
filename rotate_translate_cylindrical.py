@@ -21,30 +21,29 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-#from __future__ import print_function
 import sys
 import argparse
 import math
 
 
 def rotate_xaxis(ref_point, orig_point):
-  theta = math.atan2(ref_point[2], ref_point[0])
-  rotated_point = orig_point
-  rotated_point[0] = orig_point[0]*math.cos(math.pi/2 - theta) - orig_point[2]*math.sin(math.pi/2 - theta)
-  rotated_point[2] = orig_point[0]*math.sin(math.pi/2 - theta) + orig_point[2]*math.cos(math.pi/2 - theta)
+  theta = math.atan2(float(ref_point[2]), float(ref_point[0]))
+  rotated_point = orig_point[0:3]
+  rotated_point[0] = orig_point[0]*math.cos(math.pi/2.0 - theta) - orig_point[2]*math.sin(math.pi/2.0 - theta)
+  rotated_point[2] = orig_point[0]*math.sin(math.pi/2.0 - theta) + orig_point[2]*math.cos(math.pi/2.0 - theta)
   return rotated_point
 
 
 def rotate_yaxis(ref_point, orig_point):
-  theta = math.atan2(ref_point[2], ref_point[1])
-  rotated_point = orig_point
-  rotated_point[1] = orig_point[1]*math.cos(math.pi/2 - theta) - orig_point[2]*math.sin(math.pi/2 - theta)
-  rotated_point[2] = orig_point[1]*math.sin(math.pi/2 - theta) + orig_point[2]*math.cos(math.pi/2 - theta)
+  theta = math.atan2(float(ref_point[2]), float(ref_point[1]))
+  rotated_point = orig_point[0:3]
+  rotated_point[1] = orig_point[1]*math.cos(math.pi/2.0 - theta) - orig_point[2]*math.sin(math.pi/2.0 - theta)
+  rotated_point[2] = orig_point[1]*math.sin(math.pi/2.0 - theta) + orig_point[2]*math.cos(math.pi/2.0 - theta)
   return rotated_point
 
 def rotate_zaxis(ref_point, orig_point):
-  theta = math.atan2(ref_point[1], ref_point[0])
-  rotated_point = orig_point
+  theta = math.atan2(float(ref_point[1]), float(ref_point[0]))
+  rotated_point = orig_point[0:3]
   rotated_point[0] = orig_point[0]*math.cos(-theta) - orig_point[1]*math.sin(-theta)
   rotated_point[1] = orig_point[0]*math.sin(-theta) + orig_point[1]*math.cos(-theta)
   return rotated_point
@@ -58,7 +57,7 @@ def xyz_to_cylindrical(xyz):
   return cylindrical
 
 
-def translate_point(point_to_translate, point_to_subtract):
+def translate_point(point_to_subtract, point_to_translate):
   translated_point = []
   for x, y in zip(point_to_translate, point_to_subtract):
     translated_point.append(float(x) - float(y))
@@ -86,21 +85,22 @@ def read_points(point_file):
   return points
 
 
-def write_points(point_file, orig_points, transformed_points):
+def write_points(point_file, orig_points, transformed_points, rotated_points):
   assert(len(orig_points) == len(transformed_points))
+  assert(len(orig_points) == len(rotated_points))
   point_file.write("orig_x\torig_y\torig_z\trotated_x\trotated_y\trotated_z\trotated_rad\trotated_theta\n")
   for i in range(len(orig_points)):
     orig_point = orig_points[i]
     transformed_point = transformed_points[i]
+    rotated_point = rotated_points[i]
     cylindrical_point = xyz_to_cylindrical(transformed_point)
-    point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[0:2] ])))
+    point_file.write("%s\t%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in rotated_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[0:2] ])))
 
 
 def write_point(point_file, orig_point, transformed_point):
   cylindrical_point = xyz_to_cylindrical(transformed_point)
   point_file.write("orig_x\torig_y\torig_z\trotated_x\trotated_y\trotated_z\trotated_rad\trotated_theta\n")
-  point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[1:3] ])))
-  #point_file.write("%s\t%s\t%s\n" % ('\t'.join(orig_point), '\t'.join(cylindrical_point), '\t'.join(transformed_point)))
+  point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[0:2] ])))
 
 
 def main():
@@ -127,21 +127,27 @@ def main():
   # read in origin
   temp_points = read_points(args.origin_infile)
   origin = temp_points[0]
+  #sys.stderr.write("origin = %s\n" % ('\t'.join([str(f) for f in origin])))
   # check length of origin
   assert (len(origin) == 3)
   # read in future z-axis
   temp_points = read_points(args.z_axis_infile)
   z_axis = temp_points[0]
+  #sys.stderr.write("z_axis = %s\n" % ('\t'.join([str(f) for f in z_axis])))
   # check length of z-axis
   assert (len(z_axis) == 3)
   original_zaxis = z_axis
   # translate future z-axis (origin will be (0,0,0) )
-  z_axis = translate_point(z_axis, origin)
+  z_axis = translate_point(origin, z_axis)
+  #sys.stderr.write("translated_zaxis = %s\n" % ('\t'.join([str(f) for f in z_axis])))
   # rotate future z-axis to make it present z-axis
   yrotated_zaxis = rotate_yaxis(z_axis, z_axis)
+  #sys.stderr.write("yrotated_zaxis = %s\n" % ('\t'.join([str(f) for f in yrotated_zaxis])))
   rotated_zaxis = rotate_xaxis(yrotated_zaxis, yrotated_zaxis)
   # write z-axis
   write_point(args.z_axis_outfile, original_zaxis, rotated_zaxis)
+  #sys.stderr.write("rotated_zaxis = %s\n" % ('\t'.join([str(f) for f in rotated_zaxis])))
+  #sys.stderr.write("prerotated_z_axis = %s\n" % ('\t'.join([str(f) for f in z_axis])))
   # now read in the rest of the points and transform them
   orig_points = read_points(args.points_infile)
   rotated_points = []
@@ -149,15 +155,16 @@ def main():
     # check length of each point
     assert (len(point) == 3)
     # translate point
-    rotated_point = point
-    rotated_point = translate_point(rotated_point, origin)
+    translated_point = translate_point(origin, point)
     # rotate point add it to rotated_points
-    rotated_point = rotate_yaxis(z_axis, rotated_point)
-    rotated_points.append(rotate_xaxis(yrotated_zaxis, rotated_point))
+    rotated_point = rotate_yaxis(z_axis, translated_point)
+    rotated_point = rotate_xaxis(yrotated_zaxis, rotated_point)
+    rotated_points.append(rotated_point)
    # check if rot_ref_infile was specified, if not find it by max radius
   ref_point = []
   #if not rot_ref_infile:
   ref_point = find_max_rad_point(rotated_points)
+  #sys.stderr.write("ref_point = %s\n" % ('\t'.join([str(f) for f in ref_point])))
   #else:
     #temp_points = read_points(args.rot_ref_infile)
     #input_ref_point = temp_points[0]
@@ -170,7 +177,10 @@ def main():
   full_transformed_points = []
   for rotated_point in rotated_points:
     full_transformed_points.append(rotate_zaxis(ref_point, rotated_point))
-  write_points(args.points_outfile, orig_points, full_transformed_points)
+  write_points(args.points_outfile, orig_points, full_transformed_points, rotated_points)
+  zrotated_zaxis = rotate_zaxis(ref_point, rotated_zaxis)
+  #sys.stderr.write("rotated_zaxis = %s\n" % ('\t'.join([str(f) for f in rotated_zaxis])))
+  #sys.stderr.write("zrotated_zaxis = %s\n" % ('\t'.join([str(f) for f in zrotated_zaxis])))
 
 if __name__ == '__main__':
   main()
