@@ -94,7 +94,7 @@ def write_points(point_file, orig_points, transformed_points, rotated_points):
     transformed_point = transformed_points[i]
     rotated_point = rotated_points[i]
     cylindrical_point = xyz_to_cylindrical(transformed_point)
-    point_file.write("%s\t%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in rotated_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[0:2] ])))
+    point_file.write("%s\t%s\t%s\n" % ('\t'.join([str(f) for f in orig_point]), '\t'.join([str(f) for f in transformed_point]), '\t'.join([str(f) for f in cylindrical_point[0:2] ])))
 
 
 def write_point(point_file, orig_point, transformed_point):
