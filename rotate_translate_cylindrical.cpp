@@ -386,8 +386,9 @@ int main(int argc, const char **argv) {
       write_point(ref_outfile, original_points[max_rad_indx], rotated_ref_point, out_precision);
     }
     else{
-      vector<double> input_ref_point, ref_point;
+      vector<double> input_ref_point, ref_point, orig_ref_point;
       input_point(ref_infile, input_ref_point);
+      orig_ref_point = input_ref_point;
       if(VERBOSE){
 	cerr << "input ref point = (" << input_ref_point[0] 
 	     << "\t" << input_ref_point[1] << "\t" << input_ref_point[2] << ")" << endl;
@@ -410,7 +411,7 @@ int main(int argc, const char **argv) {
 	rotated_points.push_back(rot_point);
       }
       rotate_zaxis(ref_point, ref_point, zrotated_ref_point); 
-      write_point(ref_outfile, input_ref_point, zrotated_ref_point, out_precision);
+      write_point(ref_outfile, orig_ref_point, zrotated_ref_point, out_precision);
     }
 
     // output
